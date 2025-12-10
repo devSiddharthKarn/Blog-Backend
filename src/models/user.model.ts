@@ -1,7 +1,7 @@
 import mongoose, { Document } from "mongoose";
 import { z } from "zod";
 
-interface IUser extends Document {
+export interface IUser extends Document {
     username: string;
     password: string;
     email: string;
