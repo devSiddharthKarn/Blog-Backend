@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { getAllUserHandler,FindUserById, SignUpUser, loginUser } from "../controller/user.controller.js";
+import { checkAuthMiddleware } from "../middleware/auth.middleware.js";
 
 const userRoutes:Router = Router();
 
@@ -11,7 +12,7 @@ userRoutes.get("/findUserById/:id",FindUserById);
 
 userRoutes.post("/signup",SignUpUser);
 
-userRoutes.post("/login",loginUser);
+userRoutes.post("/login",checkAuthMiddleware,loginUser);
 
 
 
