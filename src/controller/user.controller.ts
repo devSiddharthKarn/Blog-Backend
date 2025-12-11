@@ -76,7 +76,7 @@ const SignUpUser = async (req: Request, res: Response) => {
     message: "User successfully signed in",
   });
 };
-
+// Baki controllers me v asynchandler and apierror and apiresponse use karu so errors and responses of api's become much concise and readable
 const loginUser = AsyncHandler(async (req: Request, res: Response) => {
   const loginData = loginSchema.safeParse(req.body);
   if (!loginData.success) {
