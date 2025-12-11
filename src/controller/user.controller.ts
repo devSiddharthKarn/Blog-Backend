@@ -11,6 +11,10 @@ import {
   generateAccessToken,
   generateRefreshToken,
 } from "../token/generatetoken.js";
+import { AsyncHandler } from "../utils/AscynHandler.js";
+import { ApiError } from "../utils/ApiError.js";
+import { ApiResponse } from "../utils/ApiResposne.js";
+
 const getAllUserHandler = async (req: Request, res: Response) => {
   return res.json({
     message: "All user served",
@@ -73,25 +77,22 @@ const SignUpUser = async (req: Request, res: Response) => {
   });
 };
 
-const loginUser = async (req: Request, res: Response) => {
+const loginUser = AsyncHandler(async (req: Request, res: Response) => {
   const loginData = loginSchema.safeParse(req.body);
   if (!loginData.success) {
-    return res.json({
-      status: false,
-      message: "please provide valid data for login",
-    });
+    throw new ApiError(400, "Please provide valid data for login");
   }
   const { password, email } = loginData.data;
 
   const user = await User.findOne({ email });
 
   if (!user) {
-    throw new Error("User not found");
+    throw new ApiError(404, "User not found");
   }
 
   const isPasswordCorrect = await user.isPasswordCorrect(password);
   if (!isPasswordCorrect) {
-    throw new Error("Incorrect Password");
+    throw new ApiError(409, "Incorrect Password");
   }
   const { accessToken } = await generateAccessToken(user as IUser);
   const { refreshToken } = await generateRefreshToken(user as IUser);
@@ -99,6 +100,10 @@ const loginUser = async (req: Request, res: Response) => {
   // Save refreshToken to database
   user.refreshToken = refreshToken;
   await user.save({ validateBeforeSave: false });
+
+  const loggedInUser = await User.findById(user._id).select(
+    "-password -refreshToken"
+  );
 
   // added some options for cookie security, to make sure ki frontend sa cookies change nai hos,
   const options = {
@@ -110,6 +115,12 @@ const loginUser = async (req: Request, res: Response) => {
     .status(200)
     .cookie("accessToken", accessToken, options)
     .cookie("refreshToken", refreshToken, options)
-    .json({ message: "User Login Successful" });
-};
+    .json(
+      new ApiResponse(200, "User Login SUccessfulll", {
+        user: loggedInUser,
+        accessToken,
+        refreshToken,
+      })
+    );
+});
 export { getAllUserHandler, FindUserById, SignUpUser, loginUser };
